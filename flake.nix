@@ -1,17 +1,21 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
-    flake-parts.url = "github:hercules-ci/flake-parts";
-    haskell-flake.url = "github:srid/haskell-flake";
+    common.url = "github:nammayatri/common?ref=ghc-98-upgrade";
+    nixpkgs.follows = "common/nixpkgs";
+    flake-parts.follows = "common/flake-parts";
+    haskell-flake.follows = "common/haskell-flake";
   };
   outputs = inputs@{ self, nixpkgs, flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = nixpkgs.lib.systems.flakeExposed;
       imports = [
+        inputs.common.flakeModules.ghc98
         inputs.haskell-flake.flakeModule
       ];
-      perSystem = { self', pkgs, ... }: {
-        haskellProjects.default = { };
+      perSystem = { self', pkgs, lib, config, ... }: {
+        haskellProjects.default = {
+          basePackages = config.haskellProjects.ghc98.outputs.finalPackages;
+        };
       };
     };
 }
